@@ -7,3 +7,7 @@ Google hosted Jupiter notepad - **Colab** tool info https://colab.research.googl
 
 Fully connected NN (FNN) basic linear algebra and back propagation [NN Overview by NG](https://youtu.be/fXOsFF95ifk).
 
+[Convolution NN (CNN) algebra by NG](https://www.youtube.com/playlist?list=PLkDaE6sCZn6Gl29AoE31iwdVwSG-KnDzF)
+[convolution filters](https://lodev.org/cgtutor/filtering.html) like blur, sharpen, edges.
+
+
