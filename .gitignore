@@ -2,3 +2,4 @@ tf20
 .ipynb_checkpoints
 */.ipynb_checkpoints
 tmp*
+__pycache__
