@@ -2,7 +2,7 @@
 <html>
 <head><meta charset="utf-8" />
 
-<title>notes</title>
+<title>notes-rnn</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
@@ -13077,32 +13077,9 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Time-series">Time series<a class="anchor-link" href="#Time-series">&#182;</a></h1><p>Time Series sequences and prediction of sizonal variations and trends in data by <a href="https://github.com/lmoroney/dlaicourse/tree/master/TensorFlow%20In%20Practice/Course%204%20-%20S%2BP">Laurence Moroney with examples</a>.</p>
-<p>Time Series :</p>
-<ul>
-<li><strong>Univariate</strong> - single value at each step in time</li>
-<li><strong>Multivariate</strong> - multiple values at each step in time</li>
-</ul>
-<p>Used as search of patterns in time:</p>
-<ul>
-<li>Prediction of future = forecast, past = imputation</li>
-<li>Anomaly detection</li>
-<li>Feature detection in speach recognition</li>
-</ul>
-<p>Common patterns in time series:</p>
-<ul>
-<li><strong>trend</strong> constant or linear function</li>
-<li><strong>seasonality</strong> when same patterns repeat at predictable intervals</li>
-<li><strong>combination</strong> of trend and seasonality</li>
-<li><strong>autocorrelation</strong> it correlates with a delayed copy of itself often called a lag.</li>
-<li><strong>white noise</strong> truly random signal can't be predicted.</li>
-<li><strong>Non-stationary</strong> different patterns within different time scope in data.</li>
-</ul>
-<p>Note <strong>Non-stationary</strong> time series may need few different models (each with limited time scope in data) + anomaly detection.</p>
-<p><img src="autocorrelation1.jpg" alt="autocorrelation1">
-<img src="autocorrelation2.jpg" alt="autocorrelation2">
-<img src="realmix.jpg" alt="realmix">
-<img src="non-stationary.jpg" alt="non-stationary"></p>
+<h1 id="RNN-for-Time-Series">RNN for Time Series<a class="anchor-link" href="#RNN-for-Time-Series">&#182;</a></h1><p>Conceptualy very simple.
+<img src="rnn-ts-concept.jpg" alt="rnn-ts-concept.jpg">
+<img src="rnn-dims.jpg" alt="rnn-dims.jpg"></p>
 
 </div>
 </div>
@@ -13110,130 +13087,26 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Metric-in-timeseries">Metric in timeseries<a class="anchor-link" href="#Metric-in-timeseries">&#182;</a></h2><p>train, test data sets and error measure in TS</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Fixed-Partitions">Fixed Partitions<a class="anchor-link" href="#Fixed-Partitions">&#182;</a></h3><p>Note difference TS-ML with classical ML:</p>
-<ul>
-<li>You whant to include <strong>full cycles</strong> in all sets to avoid bias of diferrent representation in data sets.</li>
-<li>tune hyper parameters on validation set</li>
-<li>include validation set in training and check final performance on test set</li>
-<li>if fianl performance is good before releasing, train production model on whole data set including test, as test has most recent data and more relevant signal for the forecast.</li>
-</ul>
-<p><img src="fixed-partitions.jpg" alt="fixed-partitions.jpg"></p>
-<h3 id="Rolling-Partitions">Rolling Partitions<a class="anchor-link" href="#Rolling-Partitions">&#182;</a></h3><ul>
-<li>take small portion of training period and try to predict next day (still inside training set)</li>
-<li>add that day to training and try to predict next day</li>
-<li>repeat until all training set is used. 
-Monitor model performance on validation set. Model accuracy should gradualy increase.</li>
-</ul>
-<p>Sometime you don't allocate test set and use next day life data as your test set.</p>
-<p><img src="roll-partitions.jpg" alt="roll-partitions.jpg"></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Metrics-for-evaluating-performance">Metrics for evaluating performance<a class="anchor-link" href="#Metrics-for-evaluating-performance">&#182;</a></h3><p><strong>MSE</strong> (L2 metric) penalizes proportinal to error value, big errors affects function more severly.</p>
-<p><strong>MAE</strong> (L1 metric) does not penalize large errors as much as the mse does. 
-If your gain or your loss is just slightly proportional to the size of the error, then the mae may be better.</p>
-<p><strong>MAPE</strong> - mean absolute percentage error, this is the mean ratio between the absolute error and the absolute value, this gives an idea of the size of the errors compared to the values.</p>
-<div class="highlight"><pre><span></span><span class="n">mae</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">mean_absolute_error</span><span class="p">(</span><span class="n">y_validation</span><span class="p">,</span> <span class="n">prediction</span><span class="p">)</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
-</pre></div>
-<p><img src="err-metric.jpg" alt=""></p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Base line (relative performance) : naive forecast, moving average (rolling average) or moving average of difference.</p>
-<p>"constant" naive forecast -&gt; f(t+1) = f(t)</p>
-<p><img src="relative-performance.jpg" alt=""></p>
-<p>Note, 
-mae(naive forecast) = 5.7
-mae(moving average) = 7.14
-,  cause components: trend, seasonality (?). <strong>differencing</strong> is a technique to remove trend, seasonality. So instead of studying the time series itself, we study the difference between the value at time T and the value at an earlier period. Differencing requires <strong>time lag</strong> assumption.</p>
-<p><img src="differencing1.jpg" alt=""></p>
-<p>base line prediction <code>f(t) = f(t-lag) + roll_avg(differencing[t, window])</code>
-with moving window = 32</p>
-<p><img src="differencing2.jpg" alt=""></p>
-<p>smoth by average 2 with centered window = [t-360, t+5 ]?! for prediction (validation test?) we can't use centered window as we dont know future, use trailing windows.</p>
-<p><img src="differencing3.jpg" alt=""></p>
-<p>Note, 
-mae(naive forecast) = 5.7
-mae(smooth moving average) = 4.5!</p>
-<p>statistical forecasting = use linear aproximations in TS (mainly smooth moving average)</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Preparing-features-and-labels">Preparing features and labels<a class="anchor-link" href="#Preparing-features-and-labels">&#182;</a></h2><p>Great support for Time Series in <a href="https://www.tensorflow.org/api_docs/python/tf/data/Dataset">tf.data.Dataset</a>. A <strong>Dataset</strong> can be used to represent an input pipeline as a collection of elements and a "logical plan" of transformations that act on those elements.</p>
-<div class="highlight"><pre><span></span><span class="n">a</span> <span class="o">=</span> <span class="n">Dataset</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>   <span class="c1"># ==&gt; [ 1, 2 ]</span>
-<span class="n">b</span> <span class="o">=</span> <span class="n">Dataset</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>   <span class="c1"># ==&gt; [ 4, 5, 6, 7 ]</span>
-<span class="n">a</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="c1"># ==&gt; [[1,2], [ 4, 5], [6, 7]] </span>
-<span class="n">d</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_tensor_slices</span><span class="p">([</span><span class="s1">&#39;hello&#39;</span><span class="p">,</span> <span class="s1">&#39;world&#39;</span><span class="p">])</span>
-</pre></div>
+<p>Note, Special case of RNN when you just using final prediction value - state to vector. It is same RNN with all unused outputs been ignored. It is default mode in TF. If want all Ys when <strong>stack RNN layers</strong> =&gt; set <code>return_sequences=True</code></p>
+<p><img src="rnn-sq2vec.jpg" alt="rnn-sq2vec.jpg"></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[108]:</div>
+<div class="prompt input_prompt">In&nbsp;[1]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># TensorSliceDataset &lt;&gt; narray! how to inspect?</span>
-<span class="n">d</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">from_tensor_slices</span><span class="p">([</span><span class="s1">&#39;hello&#39;</span><span class="p">,</span> <span class="s1">&#39;world&#39;</span><span class="p">])</span>
-<span class="n">d</span>
-</pre></div>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">tensorflow.keras</span> <span class="k">as</span> <span class="nn">keras</span>
 
-    </div>
-</div>
-</div>
+<span class="n">model</span> <span class="o">=</span> <span class="n">keras</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sequential</span><span class="p">([</span>
+    <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">SimpleRNN</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="n">return_sequences</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">input_shape</span><span class="o">=</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span><span class="mi">1</span><span class="p">]),</span>
+    <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">SimpleRNN</span><span class="p">(</span><span class="mi">20</span><span class="p">),</span>
+    <span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="p">])</span>
 
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[108]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>&lt;TensorSliceDataset shapes: (), types: tf.string&gt;</pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[31]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">a</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>  
-<span class="n">b</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>  
-<span class="n">ds</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>   <span class="c1"># BatchDataset([tf.Tensor&lt;tf.int64&gt;])</span>
-<span class="nb">print</span><span class="p">([</span><span class="n">tensors</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span> <span class="k">for</span> <span class="n">tensors</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">])</span>  <span class="c1"># .numpy() .shape .dtype</span>
-<span class="n">ds</span> <span class="o">==</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">],</span> <span class="p">[</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">]]</span>
+<span class="n">model</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
 </pre></div>
 
     </div>
@@ -13250,192 +13123,20 @@ mae(smooth moving average) = 4.5!</p>
 
 
 <div class="output_subarea output_stream output_stdout output_text">
-<pre>[array([1, 2], dtype=int64), array([4, 5], dtype=int64), array([6, 7], dtype=int64)]
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-    <div class="prompt output_prompt">Out[31]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>False</pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[81]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
-
-<span class="n">raw_ds</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">Dataset</span><span class="o">.</span><span class="n">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
-<span class="n">rolling_ds</span> <span class="o">=</span> <span class="n">raw_ds</span><span class="o">.</span><span class="n">window</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">window_ds</span> <span class="ow">in</span> <span class="n">rolling_ds</span><span class="p">:</span>
-    <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">window_ds</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">()</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>0 1 2 
-1 2 3 
-2 3 4 
-3 4 5 
-4 5 6 
-5 6 7 
-6 7 8 
-7 8 9 
-8 9 
-9 
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[82]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># drop_remainder - cut full windows only</span>
-<span class="n">rolling_ds</span> <span class="o">=</span> <span class="n">raw_ds</span><span class="o">.</span><span class="n">window</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">drop_remainder</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">window_ds</span> <span class="ow">in</span> <span class="n">rolling_ds</span><span class="p">:</span>
-    <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">window_ds</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">()</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>0 1 2 
-1 2 3 
-2 3 4 
-3 4 5 
-4 5 6 
-5 6 7 
-6 7 8 
-7 8 9 
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[87]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># get iputs in numpy format</span>
-<span class="n">ds</span> <span class="o">=</span> <span class="n">rolling_ds</span><span class="o">.</span><span class="n">flat_map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">window</span><span class="p">:</span> <span class="n">window</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span> <span class="c1"># 5 - max single batch length</span>
-<span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>[0 1 2]
-[1 2 3]
-[2 3 4]
-[3 4 5]
-[4 5 6]
-[5 6 7]
-[6 7 8]
-[7 8 9]
-</pre>
-</div>
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[88]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># lableling - split time window into x,y </span>
-<span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">window</span><span class="p">:</span> <span class="p">(</span><span class="n">window</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">window</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
-<span class="k">for</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">y</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>[0 1] 2
-[1 2] 3
-[2 3] 4
-[3 4] 5
-[4 5] 6
-[5 6] 7
-[6 7] 8
-[7 8] 9
+<pre>Model: &#34;sequential&#34;
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #   
+=================================================================
+simple_rnn (SimpleRNN)       (None, None, 20)          440       
+_________________________________________________________________
+simple_rnn_1 (SimpleRNN)     (None, 20)                820       
+_________________________________________________________________
+dense (Dense)                (None, 1)                 21        
+=================================================================
+Total params: 1,281
+Trainable params: 1,281
+Non-trainable params: 0
+_________________________________________________________________
 </pre>
 </div>
 </div>
@@ -13447,106 +13148,63 @@ mae(smooth moving average) = 4.5!</p>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Sequence bias is when the order of things can impact the selection of things. For example, if I were to ask you your favorite TV show, and listed "Game of Thrones", "Killing Eve", "Travellers" and "Doctor Who" in that order, you're probably more likely to select 'Game of Thrones' as you are familiar with it, and it's the first thing you see. Even if it is equal to the other TV shows. So, when training data in a dataset, we don't want the sequence to impact the training in a similar way, so it's good to shuffle them up.</p>
+<p><img src="rnn-example1.jpg" alt="rnn-example1.jpg"></p>
 
 </div>
 </div>
 </div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[89]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># shuffle to avoid sequence order bias at training.</span>
-<span class="c1"># buffer_size - number of previos elements to keep for random shuffle. Max distance between two shuffled items.</span>
-<span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="n">buffer_size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">y</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>[5 6] 7
-[1 2] 3
-[7 8] 9
-[3 4] 5
-[0 1] 2
-[6 7] 8
-[4 5] 6
-[2 3] 4
-</pre>
-</div>
-</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Sequence to sequence RNN architecture, reuses same one Dense layer on all Ys. There are NO independed copies?
+<img src="rnn-sq2sq.jpg" alt=""></p>
 
 </div>
 </div>
-
 </div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[98]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">prefetch</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;x=&quot;</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;y=&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
-</pre></div>
-
-    </div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-    <div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stdout output_text">
-<pre>x= [[6, 7], [0, 1]]
-y= [8 2]
-x= [[4, 5], [3, 4]]
-y= [6 5]
-x= [[7, 8], [5, 6]]
-y= [9 7]
-x= [[2, 3], [1, 2]]
-y= [4 3]
-</pre>
-</div>
-</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Lambda-layers">Lambda layers<a class="anchor-link" href="#Lambda-layers">&#182;</a></h2><p>Design to build in pre and post processing in NN and avoid transformation operations on data set =&gt; simplify code readability.
+<img src="rnn-lambda.jpg" alt=""></p>
 
 </div>
 </div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>It is very practical to use special callback <strong>LearningRateScheduler</strong> to train RNN on small number of epoches to choose lr that is most effective.</p>
+<p>Note <strong>special loss function</strong> (error metric) <a href="https://en.wikipedia.org/wiki/Huber_loss">Huber</a> - it is less sensitive to the random noise, very handy for time series.</p>
+<p><img src="rnn-lr.jpg" alt=""></p>
+<p>If run for 100 epoches we can see the most effective lr = (10e-5,10e-6)</p>
+<p><img src="rnn-lr-choice.jpg" alt=""></p>
+<p>actual training is run with optimal lr.
+<img src="rnn-lr-optimal.jpg" alt="">
+<img src="rnn-overfitting.jpg" alt=""></p>
+<p>stopping earlier = no overfitting</p>
+<p><img src="rnn-stop-earlier.jpg" alt=""></p>
+<p>Original notebook <a href="https://colab.research.google.com/github/lmoroney/dlaicourse/blob/master/TensorFlow%20In%20Practice/Course%204%20-%20S%2BP/S%2BP%20Week%203%20Lesson%202%20-%20RNN.ipynb">S+P Week 3 Lesson 2 - RNN.ipynb</a>, local copy <a href="rnn-ts-demo.ipynb">rnn-ts-demo.ipynb</a>.</p>
 
 </div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span> 
-</pre></div>
-
-    </div>
 </div>
 </div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="LSTM">LSTM<a class="anchor-link" href="#LSTM">&#182;</a></h2><p>Good to learn long sequences, mitigate gradient vaniting.
+<a href="https://www.coursera.org/lecture/nlp-sequence-models/long-short-term-memory-lstm-KXoay">LSTM in pictures by Ng on Coursera</a></p>
+<p>Original paper on LSTN</p>
+<p><img src="lstm-origin.jpg" alt=""></p>
+<p>coding single (but bi-directional :) layer LSTN.
+<img src="lstn-coding.jpg" alt=""></p>
+<p>LSTN exceeds accuracy of two layers RNN.</p>
+<p><img src="lstn-vs-rnn.jpg" alt="">
+<img src="lstn-two.jpg" alt=""></p>
+<p>Original notebook <a href="https://colab.research.google.com/github/lmoroney/dlaicourse/blob/master/TensorFlow%20In%20Practice/Course%204%20-%20S%2BP/S%2BP%20Week%203%20Lesson%204%20-%20LSTM.ipynb">S+P Week 3 Lesson 4 - LSTM.ipynb</a></p>
 
+</div>
+</div>
 </div>
     </div>
   </div>
